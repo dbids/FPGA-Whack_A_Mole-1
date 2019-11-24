@@ -1,1 +1,1 @@
-# Whack A Mole Implemenation on an FPGA board
+# Whack A Mole Implementation on an FPGA board
