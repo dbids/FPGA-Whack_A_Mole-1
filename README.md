@@ -1,1 +1,1 @@
-# FPGA-Whack_A_Mole
+# Whack A Mole Implemenation on an FPGA board
