@@ -1,4 +1,4 @@
-module slow_clock(input clock, reset, output reg new_clock);
+module clock_divider_1Hz(input clock, reset, output reg new_clock);
 
 parameter MAX = 50000000; 
 reg [10:0] counter;
