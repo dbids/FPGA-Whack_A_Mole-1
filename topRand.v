@@ -4,7 +4,7 @@ output [4:0]displayL;
 
 wire [2:0]number;
 
-randomNum rn(.clk_out(clk), .reset(reset), .number(number));
+randomNum rn(.clk(clk), .reset(reset), .number(number));
 LEDdisplay ld(.number(number), .displayL(displayL));
 
 endmodule

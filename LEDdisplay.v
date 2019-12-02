@@ -5,6 +5,10 @@ output reg [4:0] displayL;
   always@(number, displayL) begin
 
         case(number)
+        3'b000: begin
+            displayL <= 5'b00010;
+        end
+        
         3'b001: begin
           displayL <= 5'b00001;
         end

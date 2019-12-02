@@ -20,16 +20,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module display_control(clock, count, reset, digit_select, binary_out);
-  input [15:0] count;
+  input [31:0] count;
   input clock, reset;
   output reg [3:0] binary_out;
   output reg [7:0] digit_select; //Made this 8 bit to turn off the other four displays
-  reg [1:0] select = 2'b00;
+  reg [2:0] select = 3'b000;
   
   //Counter behavoiral implementation
   always @(posedge clock or posedge reset) begin
     if (reset)
-        select = 2'b00;
+        select = 3'b00;
     else
         select = select + 1'b1;
   end
@@ -37,22 +37,39 @@ module display_control(clock, count, reset, digit_select, binary_out);
   //MUX behavoiral implementation
   always @(posedge clock) begin
     case (select)
-      2'b00: begin
+      3'b000: begin
         digit_select <= 8'b11111110;
         binary_out <= count[3:0];
         end
-      2'b01: begin
+      3'b001: begin
         digit_select <= 8'b11111101;
         binary_out <= count[7:4];
         end
-      2'b10: begin
+      3'b010: begin
         digit_select <= 8'b11111011;
         binary_out <= count[11:8];
         end
-      2'b11: begin
+      3'b011: begin
         digit_select <= 8'b11110111;
         binary_out <= count[15:12];
         end
+        3'b100: begin
+        digit_select <= 8'b11101111;
+        binary_out <= count[19:16];
+        end
+      3'b101: begin
+        digit_select <= 8'b11011111;
+        binary_out <= count[23:20];
+        end
+      3'b110: begin
+        digit_select <= 8'b10111111;
+        binary_out <= count[27:24];
+        end
+      3'b111: begin
+        digit_select <= 8'b01111111;
+        binary_out <= count[31:28];
+        end
+       
     endcase
   end
 

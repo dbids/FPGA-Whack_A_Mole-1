@@ -19,18 +19,19 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module counter32(reset, inc, count);
-input            inc, reset;
-output reg [31:0] count = 32'b00000000;
+module counter32(reset, clock, inc, count);
+input            clock, inc, reset;
+output reg [31:0] count = 32'h00000000;
 
-always @(posedge inc, posedge reset) begin
+always @(posedge clock, posedge reset) begin
     if (reset) 
-    begin
-      count = 32'b00000000;
-    end
-    else begin
-        count = count + 32'b00000001;
-    end
+        begin
+            count = 32'h00000000;
+        end else begin
+            if (clock & inc) begin
+                count = count + 32'h00000001;
+            end
+        end
 end
    
 endmodule
