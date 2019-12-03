@@ -20,16 +20,23 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 //Partial top module, 5 second countdown not fully implemented
-module top_wack_a_mole(clk, reset, switch_in, digit_select, seven_seg, led_out);
+module top_wack_a_mole(clk, reset, button_in, digit_select, seven_seg, led_out);
     output [6:0] seven_seg;
     output [7:0] digit_select;
     output [4:0] led_out;
     input        clk, reset;
-    input  [4:0] switch_in;
-    wire check_to_counter,clock_lHz, clock_lkHz, reset_debounced;
+    input  [4:0] button_in;
+    wire check_to_counter, clock_lHz, clock_lkHz, game_begin;
     wire [3:0] dc_to_seven;
     wire [31:0] counter_to_mux, mux_to_dc, count_down;
-    wire game_begin;
+    wire [4:0] button_in_db;
+   
+   //Debounce the buttons
+   debouncer d1(.clock(clk), .reset(reset), .button_in(button_in[0]), .button_out(button_in_db[0]));
+   debouncer d2(.clock(clk), .reset(reset), .button_in(button_in[1]), .button_out(button_in_db[1]));
+   debouncer d3(.clock(clk), .reset(reset), .button_in(button_in[2]), .button_out(button_in_db[2]));
+   debouncer d4(.clock(clk), .reset(reset), .button_in(button_in[3]), .button_out(button_in_db[3]));
+   debouncer d5(.clock(clk), .reset(reset), .button_in(button_in[4]), .button_out(button_in_db[4]));
    
     //Establish the clocks based on the clock divider modules
     clock_divider_1Hz cd1(.clock(clk), .reset(reset), .new_clock(clock_lHz));
@@ -37,8 +44,8 @@ module top_wack_a_mole(clk, reset, switch_in, digit_select, seven_seg, led_out);
     
     //Create the 30 second countdown path
     topRand tr(.clk(clk), .reset(reset), .displayL(led_out));
-    checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(switch_in), .out(check_to_counter));
-    counter32 c(.count(counter_to_mux), .reset(reset), .inc(check_to_counter), .clock(clock_1Hz));
+    checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(button_in), .out(check_to_counter));
+    counter32 c(.count(counter_to_mux), .reset(reset), .inc(check_to_counter), .clock(clock_lHz));
     
     //Create the 5 second countdown path
     fiveSecCountdown fsc(.countout(count_down), .clk(clock_lHz), .reset(reset));
