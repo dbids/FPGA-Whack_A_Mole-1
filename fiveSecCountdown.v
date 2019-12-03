@@ -26,7 +26,7 @@ input            clk, reset;
 output reg [31:0] countout = 32'd5;
 
 always @(posedge clk, posedge reset) begin
-    if (reset || countout == 32'd0) 
+    if (reset || countout == 32'd1) 
     begin
       countout <= 32'd5;
     end
