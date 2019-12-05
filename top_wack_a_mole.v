@@ -43,8 +43,8 @@ module top_wack_a_mole(clk, reset, button_in, digit_select, seven_seg, led_out);
     clock_divider_1kHz cd2(.clk_100MHz(clk), .clk_1kHz(clock_lkHz), .reset(reset));
     
     //Create the 30 second countdown path
-    topRand tr(.clk(clk), .reset(reset), .displayL(led_out));
-    checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(button_in), .out(check_to_counter));
+    topRand tr(.clk(clock_1Hz), .reset(reset), .displayL(led_out));
+    checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(button_in_db), .out(check_to_counter));
     counter32 c(.count(counter_to_mux), .reset(reset), .inc(check_to_counter), .clock(clock_lHz));
     
     //Create the 5 second countdown path
