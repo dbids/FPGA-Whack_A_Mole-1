@@ -24,11 +24,11 @@ module top_wack_a_mole(clk, reset, button_in, digit_select, seven_seg, led_out);
     output [6:0] seven_seg;
     output [7:0] digit_select;
     output [4:0] led_out;
-    input        clk, reset;
+    input  clk, reset;
     input  [4:0] button_in;
     wire check_to_counter, clock_lHz, clock_lkHz, game_begin;
     wire [3:0] dc_to_seven;
-    wire [31:0] counter_to_mux, mux_to_dc, count_down;
+    wire [15:0] counter_to_mux, mux_to_dc, count_down, counter_bcd;
     wire [4:0] button_in_db;
    
    //Debounce the buttons
@@ -43,9 +43,12 @@ module top_wack_a_mole(clk, reset, button_in, digit_select, seven_seg, led_out);
     clock_divider_1kHz cd2(.clk_100MHz(clk), .clk_1kHz(clock_lkHz), .reset(reset));
     
     //Create the 30 second countdown path
-    topRand tr(.clk(clock_1Hz), .reset(reset), .displayL(led_out));
+    topRand tr(.clk(clock_lHz), .reset(reset), .displayL(led_out));
     checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(button_in_db), .out(check_to_counter));
-    counter32 c(.count(counter_to_mux), .reset(reset), .inc(check_to_counter), .clock(clock_lHz));
+    
+    
+    counter32 c(.count(counter_bcd), .reset(reset), .inc(check_to_counter), .clock(clock_lHz));
+    binary2BCD bcd(.binary(counter_bcd), .bcdOut(counter_to_mux));
     
     //Create the 5 second countdown path
     fiveSecCountdown fsc(.countout(count_down), .clk(clock_lHz), .reset(reset));
@@ -55,7 +58,7 @@ module top_wack_a_mole(clk, reset, button_in, digit_select, seven_seg, led_out);
     assign mux_to_dc = (game_begin) ? counter_to_mux : count_down;
     
     //Create the display control path post MUX
-    display_control dc(.clock(clock_lkHz), .count(mux_to_dc), .reset(reset), .digit_select(digit_select), .binary_out(dc_to_seven));
+    display_control dc(.clk(clock_lkHz), .counter32(mux_to_dc), .reset(reset), .digit_Select(digit_select), .binaryNUM(dc_to_seven));
     seven_segment_decoder ss(.binary_in(dc_to_seven), .reset(reset), .display_out(seven_seg));
     
 endmodule
