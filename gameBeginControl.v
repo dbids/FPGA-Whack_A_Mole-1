@@ -20,24 +20,28 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module gameBeginControl(
-    output reg game_begin,
-    input reset, clk
-    );
+module gameBeginControl(game_begin, reset, clk);
+    output reg [1:0] game_begin;
+    input reset, clk;
     
-    reg [5:0] counter = 6'd1;
+    parameter day = 17'd86400; //this is the amount of seconds in a day, after which the program will restart as the counter rolls over
+    reg [16:0] counter = 17'd1;
     
     always @(posedge reset or posedge clk) begin
-        if (reset || counter >= 6'd35) begin
-            game_begin <= 1'b0;
-            counter <= 6'd1;
+        if (reset) begin
+            game_begin <= 2'b00;
+            counter <= 17'd1;
         end else begin
             counter <= counter + 1'b1;
-            if (counter < 6'd5) begin
-                game_begin <= 1'b0;
-            end else begin
-                game_begin <= 1'b1;
+            if (counter < 17'd5) begin
+                game_begin <= 2'b00;
+            end else begin 
+                if (counter < 17'd35) begin
+                    game_begin <= 2'b01;
+                end else begin
+                    game_begin <= 2'b10;
+                end
             end
         end
-    end
+    end //always 
 endmodule

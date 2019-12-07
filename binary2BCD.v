@@ -1,7 +1,7 @@
 module binary2BCD(binary, bcdOut);
-input [15:0]binary;
-output reg[15:0]bcdOut;
-reg[3:0] hundreds, tens, ones, empty = 4'b0000;
+input [31:0]binary;
+output reg[31:0]bcdOut;
+reg[3:0] hundreds, tens, ones;
 
 
 integer i;
@@ -26,7 +26,7 @@ ones = ones <<1;
 ones[0] = binary[i];
 end
 
-bcdOut = {empty[3:0], hundreds[3:0], tens[3:0], ones[3:0]};
+bcdOut = {20'd0, hundreds[3:0], tens[3:0], ones[3:0]};
 
 end
 
