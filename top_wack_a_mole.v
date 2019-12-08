@@ -20,42 +20,48 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 //Partial top module, 5 second countdown not fully implemented
-module top_wack_a_mole(clk, reset, button_in, digit_select, seven_seg, led_out);
+module top_wack_a_mole(clk, reset, switch_in, digit_select, seven_seg, mux_to_led, level_select);
     output [6:0] seven_seg;
     output [7:0] digit_select;
-    output [4:0] led_out;
-    input        clk, reset;
-    input  [4:0] button_in;
-    wire check_to_counter, clock_lHz, clock_lkHz, game_begin;
+    output [4:0] mux_to_led;
+    input        clk, reset, level_select;
+    input  [4:0] switch_in;
+    wire check_to_counter, clock_lHz, clock_lkHz, clock_4Hz, clock_choice;
+    wire [1:0] game_begin;
     wire [3:0] dc_to_seven;
-    wire [31:0] counter_to_mux, mux_to_dc, count_down;
-    wire [4:0] button_in_db;
-   
-   //Debounce the buttons
-   debouncer d1(.clock(clk), .reset(reset), .button_in(button_in[0]), .button_out(button_in_db[0]));
-   debouncer d2(.clock(clk), .reset(reset), .button_in(button_in[1]), .button_out(button_in_db[1]));
-   debouncer d3(.clock(clk), .reset(reset), .button_in(button_in[2]), .button_out(button_in_db[2]));
-   debouncer d4(.clock(clk), .reset(reset), .button_in(button_in[3]), .button_out(button_in_db[3]));
-   debouncer d5(.clock(clk), .reset(reset), .button_in(button_in[4]), .button_out(button_in_db[4]));
-   
+    wire [31:0] counter_to_mux, mux_to_bcd, bcd_to_dc, count_down, latch_out;
+    wire [4:0] button_in_db, led_out;
+    wire [4:0] led_wait=5'b00000;
+      
     //Establish the clocks based on the clock divider modules
     clock_divider_1Hz cd1(.clock(clk), .reset(reset), .new_clock(clock_lHz));
     clock_divider_1kHz cd2(.clk_100MHz(clk), .clk_1kHz(clock_lkHz), .reset(reset));
+    clock_divider_4Hz cd3(.clock(clk), .reset(reset), .new_clock(clock_4Hz));
+    
+    //Choose the level(fast vs slow)
+    assign clock_choice = (level_select) ? clock_4Hz : clock_lHz;
     
     //Create the 30 second countdown path
-    topRand tr(.clk(clk), .reset(reset), .displayL(led_out));
-    checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(button_in), .out(check_to_counter));
-    counter32 c(.count(counter_to_mux), .reset(reset), .inc(check_to_counter), .clock(clock_lHz));
+    topRand tr(.clk(clock_choice), .reset(reset), .displayL(led_out));
+    checkInput ci(.reset(reset), .rand_in(led_out), .switch_in(switch_in), .out(check_to_counter));
+    counter32 c(.count(counter_to_mux), .reset(reset), .inc(check_to_counter), .clock(clock_choice));
     
     //Create the 5 second countdown path
     fiveSecCountdown fsc(.countout(count_down), .clk(clock_lHz), .reset(reset));
     
-    //Switch between the 5 second countdown and 30 second game
-    gameBeginControl gb(.reset(reset), .game_begin(game_begin), .clk(clock_lHz));
-    assign mux_to_dc = (game_begin) ? counter_to_mux : count_down;
+    //Create the end game score
+    game_over go(.select(game_begin), .binary_in(counter_to_mux), .latch_out(latch_out), .clk(clk));
     
-    //Create the display control path post MUX
-    display_control dc(.clock(clock_lkHz), .count(mux_to_dc), .reset(reset), .digit_select(digit_select), .binary_out(dc_to_seven));
+    //Switch between the 5 second countdown and 30 second game and the end game score
+    gameBeginControl gb(.reset(reset), .game_begin(game_begin), .clk(clock_lHz));
+    assign mux_to_bcd = (game_begin==2'b00) ? count_down : (game_begin==2'b01)? counter_to_mux: latch_out;
+    assign mux_to_led = (game_begin==1'b1)? led_out : led_wait;
+    
+    //Conver the score to BCD
+    binary2BCD bcd(mux_to_bcd, bcd_to_dc);
+    
+    //Create the display control path post BCD
+    display_control dc(.clock(clock_lkHz), .count(bcd_to_dc), .reset(reset), .digit_select(digit_select), .binary_out(dc_to_seven));
     seven_segment_decoder ss(.binary_in(dc_to_seven), .reset(reset), .display_out(seven_seg));
     
 endmodule
