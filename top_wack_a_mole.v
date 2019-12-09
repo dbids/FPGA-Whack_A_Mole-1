@@ -20,9 +20,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 //Partial top module, 5 second countdown not fully implemented
-module top_wack_a_mole(clk, reset, switch_in, digit_select, seven_seg, led_out, level_select);
+module top_wack_a_mole(digit_select, seven_seg, led_out, rgb_led, clk, reset, switch_in, level_select,);
     output [6:0] seven_seg;
     output [7:0] digit_select;
+    output [5:0] rgb_led;
     output [4:0] led_out;
     input        clk, reset, level_select;
     input  [4:0] switch_in;
@@ -57,7 +58,10 @@ module top_wack_a_mole(clk, reset, switch_in, digit_select, seven_seg, led_out, 
     //Switch between the 5 second countdown and 30 second game and the end game score
     gameBeginControl gb(.game_begin(game_begin), .reset(reset), .clk(clock_lHz));
     assign mux_to_bcd = (game_begin==2'b00) ? count_down : (game_begin==2'b01)? counter_to_mux: latch_out;
-    assign led_out = (game_begin==1'b1)? led_to_mux : led_wait;
+    assign led_out = (game_begin==2'b01) ? led_to_mux : led_wait;
+    
+    //Change color of rgb leds based on difficulty
+    assign rgb_led = (game_begin==2'b01) ? (level_select) ? 6'b100100 : 6'b010010 : 6'b000000;
     
     //Conver the score to BCD
     binary2BCD bcd(mux_to_bcd, bcd_to_dc);
